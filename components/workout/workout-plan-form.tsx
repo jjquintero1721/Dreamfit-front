@@ -72,6 +72,8 @@ const WEIGHT_UNITS = ["kg", "lb"];
 
 const ELEMENT_OPTIONS = [
   "Máquina",
+  "Mancuernas",
+  "Maquina Smith",
   "Barra",
   "Banda",
   "Polea",

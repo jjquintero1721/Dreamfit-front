@@ -1,7 +1,7 @@
 // app/dashboard/mentee-details/[id]/meal-plan/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -61,18 +61,87 @@ interface MenteeInfo {
   user_id: string;
   name: string;
   last_name: string;
+  userPlans?: {
+    mealPlan: {
+      active: boolean;
+      planId: string;
+    };
+    workoutsPlan: {
+      active: boolean;
+      planId: string;
+    };
+  };
 }
 
 export default function MealPlanPage() {
   const [mealPlan, setMealPlan] = useState<MealPlanResponse | null>(null);
   const [menteeInfo, setMenteeInfo] = useState<MenteeInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const id = params.id as string;
+  const isMounted = useRef(true);
 
+  // Usar useCallback para memoizar fetchData
+  const fetchData = useCallback(async () => {
+    // Solo hacer fetch si el componente está montado
+    if (!isMounted.current) return;
+
+    setIsLoading(true);
+    try {
+      // Fetch mentee info
+      const menteeResponse = await api.get(`/mentees/info/${id}`);
+      if (isMounted.current) {
+        setMenteeInfo(menteeResponse.data.data);
+      }
+
+      // Fetch meal plan
+      try {
+        const response = await api.get(`/meal-plans/mentee/${id}`);
+        if (isMounted.current) {
+          setMealPlan(response.data.data);
+        }
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          if (isMounted.current) {
+            setMealPlan(null);
+          }
+        } else {
+          console.error("Failed to fetch meal plan:", error);
+          if (isMounted.current) {
+            toast.error("Error al cargar el plan de alimentación");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar información:", error);
+      if (isMounted.current) {
+        toast.error("Error al cargar la información del alumno");
+        router.push("/dashboard");
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [id, router]);
+
+  // useEffect para control de montaje
   useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // useEffect principal para validación y carga inicial
+  useEffect(() => {
+    // Esperar a que auth termine de cargar
+    if (authLoading) return;
+
+    // Validaciones de seguridad
     if (!isAuthenticated || user?.role !== "coach") {
       router.push("/dashboard");
       return;
@@ -83,42 +152,18 @@ export default function MealPlanPage() {
       return;
     }
 
-    fetchData();
-  }, [isAuthenticated, user, id, router]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      // Fetch mentee info
-      const menteeResponse = await api.get(`/mentees/info/${id}`);
-      setMenteeInfo(menteeResponse.data.data);
-
-      // Fetch meal plan
-      try {
-        const response = await api.get(`/meal-plans/mentee/${id}`);
-        setMealPlan(response.data.data);
-      } catch (error: any) {
-        if (error.response?.status === 404) {
-          setMealPlan(null);
-        } else {
-          console.error("Failed to fetch meal plan:", error);
-          toast.error("Error al cargar el plan de alimentación");
-        }
-      }
-    } catch (error) {
-      console.error("Error al cargar información:", error);
-      toast.error("Error al cargar la información del alumno");
-      router.push("/dashboard");
-    } finally {
-      setIsLoading(false);
+    // Solo hacer fetch si no se ha inicializado
+    if (!hasInitialized) {
+      fetchData();
+      setHasInitialized(true);
     }
-  };
+  }, [authLoading, isAuthenticated, user?.role, id, hasInitialized, fetchData, router]);
 
   const handlePlanCreated = () => {
     fetchData();
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
@@ -129,6 +174,9 @@ export default function MealPlanPage() {
       </div>
     );
   }
+
+  // Verificar si tiene plan de alimentación activo
+  const hasMealPlan = menteeInfo?.userPlans?.mealPlan?.active || false;
 
   return (
     <div className="container mx-auto px-4 py-8">
