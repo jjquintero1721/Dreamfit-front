@@ -138,10 +138,10 @@ export default function MacrosCalculatorPage() {
       <Button
         variant="ghost"
         className="mb-6"
-        onClick={() => router.push(`/dashboard/mentee-details/${id}`)}
+        onClick={() => router.push(`/dashboard/mentee-details/${id}/meal-plan`)}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver a Detalles del Alumno
+        Volver a Planes Alimenticios
       </Button>
 
       <div className="mb-8">

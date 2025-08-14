@@ -1,6 +1,5 @@
 "use client";
 
-import { CarouselCards } from '@/components/ui/carousel-cards';
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
@@ -28,11 +27,10 @@ import {
   Utensils,
   AlertCircle,
   Scale,
-  MessageCircle,
   User,
   Calendar,
   Activity,
-  TrendingUp, Calculator,
+  TrendingUp
 } from "lucide-react";
 import { PhysicalDataDisplay } from "@/components/physical-data/physical-data-display";
 import { api } from "@/lib/api";
@@ -83,7 +81,7 @@ interface WeightHistoryResponse {
 
 export default function CoachMenteeDetails() {
   const [menteeInfo, setMenteeInfo] = useState<MenteeInfo | null>(null);
-  const [weightHistory, setWeightHistory] = useState<Array<{date: string, weight: number}>>([]);
+  const [weightHistory, setWeightHistory] = useState<Array<{ date: string; weight: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingWeight, setIsLoadingWeight] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,14 +119,14 @@ export default function CoachMenteeDetails() {
         const weightRecords = response.data.data.weightRecords;
 
         const transformedData = weightRecords.map(record => ({
-          date: record.date.split('T')[0],
-          weight: record.value
+          date: record.date.split("T")[0],
+          weight: record.value,
         }));
 
         setWeightHistory(transformedData.reverse());
       } catch (error) {
         console.error("Error al cargar historial de peso:", error);
-        if (error instanceof Error && !error.message.includes('404')) {
+        if (error instanceof Error && !error.message.includes("404")) {
           toast.error("No se pudo cargar el historial de peso.");
         }
       } finally {
@@ -140,18 +138,15 @@ export default function CoachMenteeDetails() {
     fetchWeightHistory();
   }, [user, router, menteeId]);
 
-  const handlePlanNavigation = (planType: 'workout' | 'meal' | 'macros') => {
+  const handlePlanNavigation = (planType: "workout" | "meal") => {
     if (!menteeInfo) return;
 
     switch (planType) {
-      case 'workout':
+      case "workout":
         router.push(`/dashboard/mentee-details/${menteeId}/workout-plan`);
         break;
-      case 'meal':
+      case "meal":
         router.push(`/dashboard/mentee-details/${menteeId}/meal-plan`);
-        break;
-      case 'macros':
-        router.push(`/dashboard/mentee-details/${menteeId}/macros-calculator`);
         break;
     }
   };
@@ -164,10 +159,7 @@ export default function CoachMenteeDetails() {
             <div className="flex flex-col items-center text-center space-y-4">
               <AlertCircle className="h-12 w-12 text-destructive" />
               <p className="text-lg font-medium">{error}</p>
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-              >
+              <Button onClick={() => window.location.reload()} variant="outline">
                 Intentar de nuevo
               </Button>
             </div>
@@ -244,51 +236,78 @@ export default function CoachMenteeDetails() {
       {/* Physical Data Display */}
       {menteeInfo && (
         <div className="mb-6">
-          <PhysicalDataDisplay
-            userId={menteeId}
-            variant="coach"
-          />
+          <PhysicalDataDisplay userId={menteeId} variant="coach" />
         </div>
       )}
 
-      {/* Plans Carousel */}
+      {/* Plan Cards with background */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">Gestión de Planes</h2>
-        <CarouselCards
-          cards={[
-            {
-              id: 'workout',
-              title: 'Plan de Entrenamiento',
-              description: menteeInfo?.userPlans.workoutsPlan.active
-                ? "Gestionar plan de entrenamiento activo"
-                : "Crear plan de entrenamiento personalizado",
-              icon: <Dumbbell className="h-5 w-5" />,
-              imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070',
-              buttonText: menteeInfo?.userPlans.workoutsPlan.active ? "Ver Plan" : "Crear Plan",
-              onClick: () => handlePlanNavigation('workout')
-            },
-            {
-              id: 'macros',
-              title: 'Calculadora de Macros',
-              description: 'Calcula los macronutrientes ideales para tu alumno',
-              icon: <Calculator className="h-5 w-5" />,
-              imageUrl: 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?q=80&w=2070',
-              buttonText: 'Calcular Macros',
-              onClick: () => handlePlanNavigation('macros')
-            },
-            {
-              id: 'meal',
-              title: 'Plan de Alimentación',
-              description: menteeInfo?.userPlans.mealPlan.active
-                ? "Gestionar plan de alimentación activo"
-                : "Crear plan de alimentación personalizado",
-              icon: <Utensils className="h-5 w-5" />,
-              imageUrl: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2070',
-              buttonText: menteeInfo?.userPlans.mealPlan.active ? "Ver Plan" : "Crear Plan",
-              onClick: () => handlePlanNavigation('meal')
-            }
-          ]}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Plan de Entrenamiento */}
+          <Card
+            className="relative overflow-hidden min-h-[280px] cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+            onClick={() => handlePlanNavigation("workout")}
+          >
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage:
+                  "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070')",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/50" />
+            </div>
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Dumbbell className="h-5 w-5" />
+                Plan de Entrenamiento
+              </CardTitle>
+              <CardDescription className="text-white/90">
+                {menteeInfo?.userPlans.workoutsPlan.active
+                  ? "Gestionar plan de entrenamiento activo"
+                  : "Crear plan de entrenamiento personalizado"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative mt-auto">
+              <Button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white">
+                {menteeInfo?.userPlans.workoutsPlan.active ? "Ver Plan" : "Crear Plan"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Plan de Alimentación */}
+          <Card
+            className="relative overflow-hidden min-h-[280px] cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+            onClick={() => handlePlanNavigation("meal")}
+          >
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage:
+                  "url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2070')",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/50" />
+            </div>
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Utensils className="h-5 w-5" />
+                Plan de Alimentación
+              </CardTitle>
+              <CardDescription className="text-white/90">
+                {menteeInfo?.userPlans.mealPlan.active
+                  ? "Gestionar plan de alimentación activo"
+                  : "Crear plan de alimentación personalizado"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative mt-auto">
+              <Button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white">
+                {menteeInfo?.userPlans.mealPlan.active ? "Ver Plan" : "Crear Plan"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Weight Progress Chart */}

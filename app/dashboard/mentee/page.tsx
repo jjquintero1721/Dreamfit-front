@@ -80,7 +80,7 @@ interface WeightHistoryResponse {
 
 export default function MenteeDashboard() {
   const [menteeInfo, setMenteeInfo] = useState<MenteeInfo | null>(null);
-  const [weightHistory, setWeightHistory] = useState<Array<{date: string, weight: number}>>([]);
+  const [weightHistory, setWeightHistory] = useState<Array<{ date: string; weight: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingWeight, setIsLoadingWeight] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,14 +113,14 @@ export default function MenteeDashboard() {
         const weightRecords = response.data.data.weightRecords;
 
         const transformedData = weightRecords.map(record => ({
-          date: record.date.split('T')[0],
-          weight: record.value
+          date: record.date.split("T")[0],
+          weight: record.value,
         }));
 
         setWeightHistory(transformedData.reverse());
       } catch (error) {
         console.error("Error al cargar historial de peso:", error);
-        if (error instanceof Error && !error.message.includes('404')) {
+        if (error instanceof Error && !error.message.includes("404")) {
           toast.error("No se pudo cargar el historial de peso.");
         }
       } finally {
@@ -134,10 +134,10 @@ export default function MenteeDashboard() {
     }
   }, [user, router]);
 
-  const handlePlanAccess = (planType: 'workout' | 'meal') => {
+  const handlePlanAccess = (planType: "workout" | "meal") => {
     if (!menteeInfo) return;
 
-    if (planType === 'workout') {
+    if (planType === "workout") {
       if (menteeInfo.userPlans.workoutsPlan.active) {
         router.push(`/dashboard/mentee/workouts`);
       } else {
@@ -159,8 +159,8 @@ export default function MenteeDashboard() {
         const weightRecords = response.data.data.weightRecords;
 
         const transformedData = weightRecords.map(record => ({
-          date: record.date.split('T')[0],
-          weight: record.value
+          date: record.date.split("T")[0],
+          weight: record.value,
         }));
 
         setWeightHistory(transformedData.reverse());
@@ -170,7 +170,6 @@ export default function MenteeDashboard() {
     };
 
     fetchWeightHistory();
-
     setPhysicalDataKey(prev => prev + 1);
   };
 
@@ -182,10 +181,7 @@ export default function MenteeDashboard() {
             <div className="flex flex-col items-center text-center space-y-4">
               <AlertCircle className="h-12 w-12 text-destructive" />
               <p className="text-lg font-medium">{error}</p>
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-              >
+              <Button onClick={() => window.location.reload()} variant="outline">
                 Intentar de nuevo
               </Button>
             </div>
@@ -223,9 +219,7 @@ export default function MenteeDashboard() {
           <CardContent>
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full">
-                  Actualizar Datos Físicos
-                </Button>
+                <Button className="w-full">Actualizar Datos Físicos</Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-auto w-[calc(100%-2rem)]">
                 <PhysicalDataForm
@@ -256,13 +250,14 @@ export default function MenteeDashboard() {
       {/* Plan Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card
-          className="relative overflow-hidden min-h-[280px] cursor-pointer transition-all hover:scale-[1.02]"
-          onClick={() => handlePlanAccess('workout')}
+          className="relative overflow-hidden min-h-[280px] cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+          onClick={() => handlePlanAccess("workout")}
         >
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070')",
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070')",
             }}
           >
             <div className="absolute inset-0 bg-black/50" />
@@ -280,17 +275,15 @@ export default function MenteeDashboard() {
           </CardHeader>
           <CardContent className="relative mt-auto">
             {menteeInfo?.userPlans.workoutsPlan.active ? (
-              <Button
-                className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white"
-              >
+              <Button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white">
                 Ver Entrenamientos
               </Button>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-white/80">Contacta a tu entrenador para comenzar con tu plan de entrenamiento personalizado.</p>
-                <Button
-                  className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white"
-                >
+                <p className="text-sm text-white/80">
+                  Contacta a tu entrenador para comenzar con tu plan de entrenamiento personalizado.
+                </p>
+                <Button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   Solicitar Plan
                 </Button>
@@ -300,13 +293,14 @@ export default function MenteeDashboard() {
         </Card>
 
         <Card
-          className="relative overflow-hidden min-h-[280px] cursor-pointer transition-all hover:scale-[1.02]"
-          onClick={() => handlePlanAccess('meal')}
+          className="relative overflow-hidden min-h-[280px] cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+          onClick={() => handlePlanAccess("meal")}
         >
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2070')",
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2070')",
             }}
           >
             <div className="absolute inset-0 bg-black/50" />
@@ -324,17 +318,15 @@ export default function MenteeDashboard() {
           </CardHeader>
           <CardContent className="relative mt-auto">
             {menteeInfo?.userPlans.mealPlan.active ? (
-              <Button
-                className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white"
-              >
+              <Button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white">
                 Ver Plan de Alimentación
               </Button>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-white/80">Contacta a tu entrenador para comenzar con tu plan de alimentación personalizado.</p>
-                <Button
-                  className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white"
-                >
+                <p className="text-sm text-white/80">
+                  Contacta a tu entrenador para comenzar con tu plan de alimentación personalizado.
+                </p>
+                <Button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-6 text-lg text-white">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   Solicitar Plan
                 </Button>
@@ -352,7 +344,9 @@ export default function MenteeDashboard() {
               <Scale className="h-5 w-5" />
               Progreso de Peso
             </CardTitle>
-            <CardDescription>Sigue los cambios en tu peso a lo largo del tiempo</CardDescription>
+            <CardDescription>
+              Sigue los cambios en tu peso a lo largo del tiempo
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {isLoadingWeight ? (
@@ -363,8 +357,12 @@ export default function MenteeDashboard() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <Scale className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground">No hay datos de peso disponibles</p>
-                  <p className="text-sm text-muted-foreground">Actualiza tus datos físicos para comenzar a ver tu progreso</p>
+                  <p className="text-lg font-medium text-muted-foreground">
+                    No hay datos de peso disponibles
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Actualiza tus datos físicos para comenzar a ver tu progreso
+                  </p>
                 </div>
               </div>
             ) : (
