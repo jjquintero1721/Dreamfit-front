@@ -1,3 +1,4 @@
+// app/dashboard/mentee-details/[id]/macros-calculator/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -28,6 +29,16 @@ interface MenteeInfo {
   weight?: {
     value: number;
     units: string;
+  };
+  userPlans?: {
+    mealPlan: {
+      active: boolean;
+      planId: string;
+    };
+    workoutsPlan: {
+      active: boolean;
+      planId: string;
+    };
   };
 }
 
@@ -71,9 +82,11 @@ export default function MacrosCalculatorPage() {
 
     const fetchData = async () => {
       try {
+        // Obtener información completa del mentee (incluye userPlans)
         const menteeResponse = await api.get(`/mentees/info/${id}`);
         setMenteeInfo(menteeResponse.data.data);
 
+        // Obtener peso más reciente
         try {
           const weightResponse = await api.get(`/physical-data/weight/${id}`);
           const weightRecords: WeightRecord[] = weightResponse.data.data.weightRecords;
@@ -81,7 +94,7 @@ export default function MacrosCalculatorPage() {
           if (weightRecords && weightRecords.length > 0) {
             const latestWeightRecord = weightRecords[0];
 
-            if (latestWeightRecord.units === 'lbs') {
+            if (latestWeightRecord.units === "lbs") {
               setLatestWeight(latestWeightRecord.value * 0.453592);
             } else {
               setLatestWeight(latestWeightRecord.value);
@@ -90,11 +103,11 @@ export default function MacrosCalculatorPage() {
             setLatestWeight(null);
           }
         } catch (weightError) {
-          // Si no hay registros de peso, es normal
           console.log("No se encontraron registros de peso para el alumno");
           setLatestWeight(null);
         }
 
+        // Obtener macros actuales si existen
         try {
           const macrosResponse = await api.get(`/macronutrients/mentee/${id}/latest`);
           setCurrentMacros(macrosResponse.data.data.macronutrients);
@@ -132,6 +145,9 @@ export default function MacrosCalculatorPage() {
     );
   }
 
+  // Verificar si el mentee tiene un plan de alimentación activo
+  const hasMealPlan = menteeInfo?.userPlans?.mealPlan?.active || false;
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Back Button */}
@@ -152,13 +168,14 @@ export default function MacrosCalculatorPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calculator Form - pasando el peso más reciente */}
+        {/* Calculator Form - pasando el peso más reciente y estado del plan */}
         <div className="lg:col-span-2 order-2 lg:order-1">
           <MacrosCalculatorForm
             menteeId={id}
             menteeName={`${menteeInfo?.name} ${menteeInfo?.last_name}`}
             currentMacros={currentMacros}
             latestWeight={latestWeight}
+            hasMealPlan={hasMealPlan}
             onCalculationComplete={handleCalculationComplete}
           />
         </div>
@@ -176,8 +193,8 @@ export default function MacrosCalculatorPage() {
               <div>
                 <h4 className="font-medium mb-1 text-sm lg:text-base">¿Cómo funciona?</h4>
                 <p className="text-xs lg:text-sm text-muted-foreground">
-                  La calculadora utiliza el peso, nivel de actividad y objetivos del alumno para determinar
-                  las calorías y macronutrientes óptimos.
+                  La calculadora utiliza el peso, nivel de actividad y objetivos del alumno para
+                  determinar las calorías y macronutrientes óptimos.
                 </p>
               </div>
               <div>
@@ -200,7 +217,19 @@ export default function MacrosCalculatorPage() {
               {latestWeight && (
                 <div className="pt-2 border-t">
                   <p className="text-xs lg:text-sm text-muted-foreground">
-                    <span className="font-medium">Peso actual del alumno:</span> {latestWeight.toFixed(1)} kg
+                    <span className="font-medium">Peso actual del alumno:</span>{" "}
+                    {latestWeight.toFixed(1)} kg
+                  </p>
+                </div>
+              )}
+              {hasMealPlan && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs lg:text-sm text-orange-600 dark:text-orange-400">
+                    <span className="font-medium">⚠️ Plan de alimentación activo</span>
+                    <br />
+                    <span className="text-muted-foreground">
+                      Recalcular macros requerirá regenerar el plan
+                    </span>
                   </p>
                 </div>
               )}
