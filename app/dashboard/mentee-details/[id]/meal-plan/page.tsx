@@ -84,20 +84,16 @@ export default function MealPlanPage() {
   const id = params.id as string;
   const isMounted = useRef(true);
 
-  // Usar useCallback para memoizar fetchData
   const fetchData = useCallback(async () => {
-    // Solo hacer fetch si el componente está montado
     if (!isMounted.current) return;
 
     setIsLoading(true);
     try {
-      // Fetch mentee info
       const menteeResponse = await api.get(`/mentees/info/${id}`);
       if (isMounted.current) {
         setMenteeInfo(menteeResponse.data.data);
       }
 
-      // Fetch meal plan
       try {
         const response = await api.get(`/meal-plans/mentee/${id}`);
         if (isMounted.current) {
@@ -105,9 +101,7 @@ export default function MealPlanPage() {
         }
       } catch (error: any) {
         if (error.response?.status === 404) {
-          if (isMounted.current) {
-            setMealPlan(null);
-          }
+          if (isMounted.current) setMealPlan(null);
         } else {
           console.error("Failed to fetch meal plan:", error);
           if (isMounted.current) {
@@ -122,13 +116,10 @@ export default function MealPlanPage() {
         router.push("/dashboard");
       }
     } finally {
-      if (isMounted.current) {
-        setIsLoading(false);
-      }
+      if (isMounted.current) setIsLoading(false);
     }
   }, [id, router]);
 
-  // useEffect para control de montaje
   useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -136,12 +127,9 @@ export default function MealPlanPage() {
     };
   }, []);
 
-  // useEffect principal para validación y carga inicial
   useEffect(() => {
-    // Esperar a que auth termine de cargar
     if (authLoading) return;
 
-    // Validaciones de seguridad
     if (!isAuthenticated || user?.role !== "coach") {
       router.push("/dashboard");
       return;
@@ -152,7 +140,6 @@ export default function MealPlanPage() {
       return;
     }
 
-    // Solo hacer fetch si no se ha inicializado
     if (!hasInitialized) {
       fetchData();
       setHasInitialized(true);
@@ -175,13 +162,12 @@ export default function MealPlanPage() {
     );
   }
 
-  // Verificar si tiene plan de alimentación activo
   const hasMealPlan = menteeInfo?.userPlans?.mealPlan?.active || false;
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <Button
             variant="ghost"
@@ -197,7 +183,8 @@ export default function MealPlanPage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        {/* Botones escritorio */}
+        <div className="hidden sm:flex gap-2">
           <Button
             variant="outline"
             onClick={() => router.push(`/dashboard/mentee-details/${id}/macros-calculator`)}
@@ -215,8 +202,27 @@ export default function MealPlanPage() {
         </div>
       </div>
 
+      {/* Botones móvil */}
+      <div className="flex flex-col gap-2 mt-4 sm:hidden">
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/dashboard/mentee-details/${id}/macros-calculator`)}
+        >
+          <Calculator className="mr-2 h-4 w-4" />
+          Calcular Macros
+        </Button>
+        {menteeInfo && (
+          <CreateMealPlanForm
+            menteeId={id}
+            menteeName={`${menteeInfo.name} ${menteeInfo.last_name}`}
+            onPlanCreated={handlePlanCreated}
+          />
+        )}
+      </div>
+
+      {/* Resto del contenido */}
       {!mealPlan ? (
-        <Card>
+        <Card className="mt-6">
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <Utensils className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -242,7 +248,7 @@ export default function MealPlanPage() {
       ) : (
         <>
           {/* Daily Requirements Card */}
-          <Card className="mb-8">
+          <Card className="mt-6 mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Utensils className="h-5 w-5" />
@@ -254,13 +260,14 @@ export default function MealPlanPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row gap-4 items-center">
-                <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold">{mealPlan.mealPlan.calories}</span>
                     <span className="text-sm text-muted-foreground">kcal</span>
                   </div>
                   <div className="h-8 w-px bg-border hidden md:block" />
                 </div>
+
                 <div className="flex gap-4 flex-wrap justify-center md:justify-start">
                   <div className="flex items-center gap-2">
                     <Beef className="h-4 w-4 text-muted-foreground" />
@@ -292,7 +299,7 @@ export default function MealPlanPage() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="1" className="w-full">
-                <TabsList className="w-full justify-start">
+                <TabsList className="w-full justify-start overflow-x-auto">
                   {mealPlan.mealPlan.days.map((day) => (
                     <TabsTrigger key={day.dayNumber} value={day.dayNumber.toString()}>
                       Día {day.dayNumber}
@@ -306,16 +313,18 @@ export default function MealPlanPage() {
                       {day.meals.map((meal) => (
                         <Card key={meal.mealnumber}>
                           <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-lg flex items-center gap-2">
-                                <Badge variant="outline">Comida {meal.mealnumber}</Badge>
-                                {meal.name}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                              <CardTitle className="text-lg flex flex-col sm:flex-row sm:items-center gap-2">
+                                <Badge variant="outline" className="w-fit">
+                                  Comida {meal.mealnumber}
+                                </Badge>
+                                <span className="mt-1 sm:mt-0">{meal.name}</span>
                               </CardTitle>
                             </div>
                           </CardHeader>
                           <CardContent>
                             <p className="text-muted-foreground mb-4">{meal.recipee}</p>
-                            <div className="flex gap-4 text-sm">
+                            <div className="flex flex-wrap gap-4 text-sm">
                               <div className="flex items-center gap-1">
                                 <Beef className="h-3 w-3 text-muted-foreground" />
                                 <span className="font-medium">{meal.mealMacros.protein}</span>

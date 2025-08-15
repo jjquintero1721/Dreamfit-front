@@ -285,6 +285,7 @@ export function MacrosCalculatorForm({
                           step="0.1"
                           placeholder={latestWeight ? `${latestWeight.toFixed(1)}` : "80"}
                           {...field}
+                          readOnly
                         />
                       </FormControl>
                       <FormDescription>

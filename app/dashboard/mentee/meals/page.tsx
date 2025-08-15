@@ -133,13 +133,14 @@ export default function MealPlanPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">{mealPlan.mealPlan.calories}</span>
                 <span className="text-sm text-muted-foreground">kcal</span>
               </div>
               <div className="h-8 w-px bg-border hidden md:block" />
             </div>
+
             <div className="flex gap-4 flex-wrap justify-center md:justify-start">
               <div className="flex items-center gap-2">
                 <Beef className="h-4 w-4 text-muted-foreground" />
