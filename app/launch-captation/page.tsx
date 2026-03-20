@@ -486,7 +486,7 @@ export default function LaunchCaptationPage() {
                                 className="glass rounded-2xl p-6"
                             >
                                 <blockquote className="text-gray-900 dark:text-slate-100">
-                                    "{testimonial.quote}"
+                                    &ldquo;{testimonial.quote}&rdquo;
                                 </blockquote>
                                 <figcaption className="mt-3 text-sm text-muted">
                                     {testimonial.author}

@@ -7,7 +7,6 @@ interface TokenData {
   userId: string;
   role: string;
   firstName: string;
-  coachCode?: string;
   exp: number;
 }
 
@@ -59,7 +58,6 @@ const authOptions: NextAuthOptions = {
             role: decoded.role,
             accessToken: access_token,
             refreshToken: refresh_token,
-            coachCode: decoded.coachCode,
           };
         } catch (error) {
           console.error("Authentication error:", error);
@@ -77,8 +75,7 @@ const authOptions: NextAuthOptions = {
           refreshToken: user.refreshToken,
           role: user.role,
           userId: user.id,
-          coachCode: user.coachCode,
-          expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+          expiresAt: Date.now() + 30 * 60 * 1000,
         };
       }
 
@@ -102,7 +99,6 @@ const authOptions: NextAuthOptions = {
         }
 
         const { access_token, refresh_token } = data.data;
-        const decoded = jwtDecode<TokenData>(access_token);
 
         return {
           ...token,
@@ -121,7 +117,6 @@ const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.userId as string,
           role: token.role as string,
-          coachCode: token.coachCode as string | undefined,
         };
         session.accessToken = token.accessToken as string;
         session.error = token.error;

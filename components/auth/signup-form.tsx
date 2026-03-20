@@ -13,17 +13,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -38,8 +30,6 @@ const signupSchema = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/,
       "La contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un carácter especial"
     ),
-  role: z.enum(["coach", "mentee"]),
-  coachCode: z.string().optional(),
   terms: z.boolean().refine((val) => val === true, {
     message: "Debes aceptar los términos y condiciones",
   }),
@@ -63,13 +53,9 @@ export function SignupForm({ onToggleForm }: SignupFormProps) {
       lastName: "",
       email: "",
       password: "",
-      role: "mentee",
-      coachCode: "", // Initialize with empty string instead of undefined
       terms: false,
     },
   });
-
-  const role = form.watch("role");
 
   const calculatePasswordStrength = (password: string) => {
     let strength = 0;
@@ -84,19 +70,15 @@ export function SignupForm({ onToggleForm }: SignupFormProps) {
   async function onSubmit(data: SignupFormValues) {
     setIsLoading(true);
     try {
-      const signupData = {
+      await signup({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-        role: data.role,
-        ...(data.coachCode && data.coachCode.trim() !== "" && { coachCode: data.coachCode }),
-      };
-
-      await signup(signupData);
+        role: "coach",
+      });
       onToggleForm();
     } catch (error) {
-      // Error is already handled by the auth context
       console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
@@ -194,7 +176,8 @@ export function SignupForm({ onToggleForm }: SignupFormProps) {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Fortaleza de contraseña: {strength === 5 ? "Fuerte" : strength >= 3 ? "Media" : "Débil"}
+                    Fortaleza de contraseña:{" "}
+                    {strength === 5 ? "Fuerte" : strength >= 3 ? "Media" : "Débil"}
                   </p>
                 </div>
               )}
@@ -202,47 +185,6 @@ export function SignupForm({ onToggleForm }: SignupFormProps) {
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Soy un</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona tu rol" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="coach">Entrenador</SelectItem>
-                  <SelectItem value="mentee">Alumno</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {role === "mentee" && (
-          <FormField
-            control={form.control}
-            name="coachCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Código de Entrenador</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ingresa el código de tu entrenador" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Ingresa el código proporcionado por tu entrenador (opcional)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
 
         <FormField
           control={form.control}
@@ -275,11 +217,7 @@ export function SignupForm({ onToggleForm }: SignupFormProps) {
           )}
         />
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading}
-        >
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Creando cuenta..." : "Crear cuenta"}
         </Button>
 

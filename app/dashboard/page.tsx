@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -12,17 +12,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, Users, Copy, ArrowRight } from "lucide-react";
+import { Search, Users, ArrowRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RegisterMenteeModal } from "@/components/dashboard/register-mentee-modal";
 
 interface Mentee {
   user_id: string;
@@ -34,42 +32,25 @@ export default function DashboardPage() {
   const [mentees, setMentees] = useState<Mentee[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [currentCode, setCurrentCode] = useState<string>("");
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // Función para obtener el código actualizado desde la base de datos
-  const refreshCoachCode = async () => {
+  const fetchMentees = useCallback(async () => {
     try {
-      const response = await api.get("/coach-code/my-code");
-      const newCode = response.data.data.code;
-
-      if (newCode && newCode !== currentCode) {
-        setCurrentCode(newCode);
-        console.log("Código actualizado:", newCode);
+      if (!session?.user?.id) {
+        throw new Error("User ID not found");
       }
+      const response = await api.get(`/mentees/${session.user.id}`);
+      setMentees(response.data.data);
     } catch (error) {
-      console.error("Error al refrescar código:", error);
+      console.error("Failed to fetch mentees:", error);
+      toast.error("Error al cargar los alumnos. Por favor, intenta de nuevo más tarde.");
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [session?.user?.id]);
 
   useEffect(() => {
-    const fetchMentees = async () => {
-      try {
-        if (!session?.user?.id) {
-          throw new Error("User ID not found");
-        }
-
-        const response = await api.get(`/mentees/${session.user.id}`);
-        setMentees(response.data.data);
-      } catch (error) {
-        console.error("Failed to fetch mentees:", error);
-        toast.error("Error al cargar los alumnos. Por favor, intenta de nuevo más tarde.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (status === "authenticated" && session?.user?.role === "coach") {
       fetchMentees();
     } else if (status === "authenticated" && session?.user?.role !== "coach") {
@@ -77,18 +58,7 @@ export default function DashboardPage() {
     } else if (status === "unauthenticated") {
       router.push("/auth");
     }
-  }, [status, session, router]);
-
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.role === "coach") {
-      if (session?.user?.coachCode && !currentCode) {
-        setCurrentCode(session.user.coachCode);
-      }
-
-      // Solo refrescar una vez al cargar
-      refreshCoachCode();
-    }
-  }, [status, session?.user?.role]);
+  }, [status, session, router, fetchMentees]);
 
   const filteredMentees = mentees.filter(
     (mentee) =>
@@ -99,13 +69,6 @@ export default function DashboardPage() {
 
   const handleMenteeClick = (id: string) => {
     router.push(`/dashboard/mentee-details/${id}`);
-  };
-
-  const copyCoachCode = () => {
-    if (currentCode) {
-      navigator.clipboard.writeText(currentCode);
-      toast.success("¡Código de entrenador copiado al portapapeles!");
-    }
   };
 
   if (status === "loading") {
@@ -138,47 +101,26 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Grid layout for cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Card className="bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-500/10 dark:via-blue-500/5 dark:to-transparent border-blue-200 dark:border-blue-500/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400">Total de Alumnos</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
-              {mentees.length}
+      {/* Stats card + action button */}
+      <Card className="mb-8 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-500/10 dark:via-blue-500/5 dark:to-transparent border-blue-200 dark:border-blue-500/20">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/15">
+              <Users className="h-5 w-5 text-blue-500" />
             </div>
-            <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
-              {mentees.length === 1 ? "Alumno Activo" : "Alumnos Activos"}
-            </p>
-          </CardContent>
-        </Card>
-
-        {currentCode && (
-          <Card className="bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-500/10 dark:via-blue-500/5 dark:to-transparent border-blue-200 dark:border-blue-500/20">
-            <CardHeader>
-              <CardTitle className="text-blue-700 dark:text-blue-400">Tu Código de Entrenador</CardTitle>
-              <CardDescription className="text-blue-600/80 dark:text-blue-400/80">
-                Comparte este código con tus alumnos para conectar con ellos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <code className="relative rounded bg-blue-500/10 px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold text-blue-600 dark:text-blue-400">
-                {currentCode}
-              </code>
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-2 border-blue-500/20 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                onClick={copyCoachCode}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            <div>
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Total de Alumnos</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-blue-700 dark:text-blue-400">{mentees.length}</span>
+                <span className="text-sm text-blue-600/80 dark:text-blue-400/80">
+                  {mentees.length === 1 ? "Alumno Activo" : "Alumnos Activos"}
+                </span>
+              </div>
+            </div>
+          </div>
+          <RegisterMenteeModal onMenteeCreated={fetchMentees} />
+        </CardContent>
+      </Card>
 
       <div className="relative mb-6">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

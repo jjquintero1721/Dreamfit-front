@@ -28,7 +28,6 @@ interface User {
   firstName: string;
   lastName?: string;
   role: "coach" | "mentee" | "system";
-  coachCode?: string;
 }
 
 interface SignupData {
@@ -37,7 +36,6 @@ interface SignupData {
   firstName: string;
   lastName: string;
   role: "coach" | "mentee";
-  coachCode?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,7 +52,6 @@ function AuthProviderContent({ children }: { children: ReactNode }) {
         email: session.user.email,
         firstName: session.user.name || "",
         role: session.user.role as "coach" | "mentee" | "system",
-        coachCode: session.user.coachCode,
       });
 
       // Set the access token for API calls
