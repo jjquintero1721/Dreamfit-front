@@ -9,7 +9,6 @@ declare module "next-auth" {
     role: string;
     accessToken: string;
     refreshToken: string;
-    coachCode?: string;
   }
 
   interface Session {
@@ -19,7 +18,6 @@ declare module "next-auth" {
       name?: string | null;
       image?: string | null;
       role: string;
-      coachCode?: string;
     };
     accessToken: string;
     error?: string;
@@ -32,7 +30,6 @@ declare module "next-auth/jwt" {
     refreshToken: string;
     role: string;
     userId: string;
-    coachCode?: string;
     expiresAt: number;
     error?: string;
   }
